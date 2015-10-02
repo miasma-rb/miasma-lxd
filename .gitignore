@@ -1,0 +1,6 @@
+.*
+!.gitignore
+*.lock
+*.gem
+*.crt
+*.key
