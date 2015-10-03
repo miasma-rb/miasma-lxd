@@ -1,4 +1,6 @@
 require 'miasma'
+require 'shellwords'
+require 'bogo-websocket'
 
 module Miasma
   module Models
@@ -134,13 +136,98 @@ module Miasma
             Server.new(
               self,
               :id => c_name,
-              :name => c_name,
-              :image_id => 'unknown',
-              :flavor_id => 'unknown',
-              :state => :pending,
-              :status => 'unknown'
+              :name => c_name
             ).valid_state
           end
+        end
+
+        # Fetch file from server
+        #
+        # @param server [Miasma::Models::Compute::Server]
+        # @param path [String] remote path
+        # @return [IO-ish]
+        def server_get_file(server, path)
+          request(
+            :path => "containers/#{server.id}/files",
+            :params => {
+              :path => path
+            }
+          ).get(:body)
+        end
+
+        # Put file on server
+        #
+        # @param server [Miasma::Models::Compute::Server]
+        # @param io [IO-ish]
+        # @param remote_path [String]
+        # @return [TrueClass]
+        def server_put_file(server, io, remote_path, options={})
+          request(
+            :method => :post,
+            :path => "containers/#{server.id}/files",
+            :path => remote_path,
+            :body => io,
+            :headers => {
+              'X-LXD-uid' => options.fetch(:uid, 0),
+              'X-LXD-gid' => options.fetch(:gid, 0),
+              'X-LXD-mode' => options.fetch(:mode, 0700)
+            }
+          )
+          true
+        end
+
+        # Execute command
+        #
+        # @param server [Miasma::Models::Compute::Server]
+        # @param command [String]
+        # @param options [Hash]
+        # @option options [IO] :stream write command output
+        # @return [TrueClass, FalseClass] command was successful
+        def server_execute(server, command, options={})
+          result = request(
+            :method => :post,
+            :path => "containers/#{server.id}/exec",
+            :expects => 202,
+            :json => Smash.new(
+              :command => Shellwords.shellwords(command),
+              :interactive => true,
+              'wait-for-websocket' => true
+            )
+          )
+          dest = URI.parse(api_endpoint)
+          operation = result.get(:body, :operation).sub("/#{version}/operations/", '')
+          ws_common = Smash.new(
+            :ssl_key => ssl_key,
+            :ssl_certificate => ssl_certificate
+          )
+          if(options[:stream])
+            ws_common[:on_message] = proc{|message|
+              options[:stream].write(message)
+            }
+          end
+          websockets = Smash[
+            ['control', '0'].map do |fd_id|
+              fd_secret = result.get(:body, :metadata, :fds, fd_id)
+              [
+                fd_id,
+                Bogo::Websocket::Client.new(
+                  ws_common.merge(
+                    :destination => "wss://#{[dest.host, dest.port].compact.join(':')}",
+                    :path => "/#{version}/operations/#{operation}/websocket",
+                    :params => {
+                      :secret => fd_secret
+                    }
+                  )
+                )
+              ]
+            end
+          ]
+          wait_for_operation(operation, options.fetch(:timeout, 20))
+          websockets.map(&:last).map(&:close)
+          result = request(
+            :path => "operations/#{operation}"
+          )
+          result.get(:body, :metadata, :metadata, :return) == 0
         end
 
         protected
@@ -148,8 +235,9 @@ module Miasma
         # Wait for a remote operation to complete
         #
         # @param op_uuid [String]
+        # @param timeout [Integer]
         # @return [TrueClass]
-        def wait_for_operation(op_uuid)
+        def wait_for_operation(op_uuid, timeout=20)
           op_uuid = op_uuid.sub("/#{version}/operations/", '')
           request(
             :path => "operations/#{op_uuid}/wait",
