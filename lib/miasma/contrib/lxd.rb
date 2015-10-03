@@ -47,7 +47,6 @@ module Miasma
           dest, options = request_args
           options = Smash.new unless options
           options[:ssl_context] = ssl_context
-          p dest
           connection.send(http_method, dest, options)
         end
 
