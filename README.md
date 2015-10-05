@@ -43,4 +43,4 @@ Miasma.api(
 |Storage       |      |    |      |      |
 
 ## Info
-* Repository: https://github.com/miasma-rb/miasma-aws
+* Repository: https://github.com/miasma-rb/miasma-lxd
