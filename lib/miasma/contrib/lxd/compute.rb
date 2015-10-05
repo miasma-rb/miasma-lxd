@@ -161,12 +161,15 @@ module Miasma
         # @param io [IO-ish]
         # @param remote_path [String]
         # @return [TrueClass]
+        # @todo update to write in chunks when over `n` size
         def server_put_file(server, io, remote_path, options={})
           request(
             :method => :post,
             :path => "containers/#{server.id}/files",
-            :path => remote_path,
-            :body => io,
+            :params => {
+              :path => remote_path
+            },
+            :body => io.read,
             :headers => {
               'X-LXD-uid' => options.fetch(:uid, 0),
               'X-LXD-gid' => options.fetch(:gid, 0),
