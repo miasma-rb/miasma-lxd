@@ -194,7 +194,8 @@ module Miasma
             :json => Smash.new(
               :command => Shellwords.shellwords(command),
               :interactive => true,
-              'wait-for-websocket' => true
+              'wait-for-websocket' => true,
+              :environment => options.fetch(:environment, {})
             )
           )
           dest = URI.parse(api_endpoint)
