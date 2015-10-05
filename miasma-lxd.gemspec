@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.license = 'Apache 2.0'
   s.require_path = 'lib'
   s.add_runtime_dependency 'http'
+  s.add_runtime_dependency 'bogo-websocket'
   s.add_development_dependency 'miasma', '>= 0.2.31'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'minitest'
