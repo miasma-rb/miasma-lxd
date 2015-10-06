@@ -185,7 +185,8 @@ module Miasma
         # @param command [String]
         # @param options [Hash]
         # @option options [IO] :stream write command output
-        # @return [TrueClass, FalseClass] command was successful
+        # @option options [Integer] :return_exit_code
+        # @return [TrueClass, FalseClass, Integer] command was successful
         def server_execute(server, command, options={})
           result = request(
             :method => :post,
@@ -231,7 +232,11 @@ module Miasma
           result = request(
             :path => "operations/#{operation}"
           )
-          result.get(:body, :metadata, :metadata, :return) == 0
+          if(options[:return_exit_code])
+            result.get(:body, :metadata, :metadata, :return)
+          else
+            result.get(:body, :metadata, :metadata, :return) == 0
+          end
         end
 
         protected
