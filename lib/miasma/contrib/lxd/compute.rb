@@ -16,6 +16,9 @@ module Miasma
           'stopped' => :stopped
         )
 
+        # @return [Integer]
+        DEFAULT_EXEC_TIMEOUT = 20
+
         # Reload a server model's data
         #
         # @param server [Miasma::Models::Compute::Server]
@@ -186,6 +189,7 @@ module Miasma
         # @param options [Hash]
         # @option options [IO] :stream write command output
         # @option options [Integer] :return_exit_code
+        # @option options [Integer] :timeout
         # @return [TrueClass, FalseClass, Integer] command was successful
         def server_execute(server, command, options={})
           result = request(
@@ -227,7 +231,7 @@ module Miasma
               ]
             end
           ]
-          wait_for_operation(operation, options.fetch(:timeout, 20))
+          wait_for_operation(operation, options.fetch(:timeout, DEFAULT_EXEC_TIMEOUT))
           websockets.map(&:last).map(&:close)
           result = request(
             :path => "operations/#{operation}"
@@ -246,13 +250,13 @@ module Miasma
         # @param op_uuid [String]
         # @param timeout [Integer]
         # @return [TrueClass]
-        def wait_for_operation(op_uuid, timeout=20)
+        def wait_for_operation(op_uuid, timeout=DEFAULT_EXEC_TIMEOUT)
           op_uuid = op_uuid.sub("/#{version}/operations/", '')
           request(
             :path => "operations/#{op_uuid}/wait",
             :params => {
               :status_code => 200,
-              :timeout => 20
+              :timeout => timeout
             }
           )
           true
