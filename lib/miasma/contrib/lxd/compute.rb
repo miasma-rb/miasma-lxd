@@ -154,7 +154,8 @@ module Miasma
             :path => "containers/#{server.id}/files",
             :params => {
               :path => path
-            }
+            },
+            :disable_body_extraction => true
           ).get(:body)
         end
 
