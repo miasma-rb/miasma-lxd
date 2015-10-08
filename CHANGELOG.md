@@ -1,3 +1,6 @@
+# v0.1.4
+* Disable automatic body extraction on remote file fetch
+
 # v0.1.2
 * Allow timeout configuration on exec waiter
 * Do not automatically close connection on EOF
