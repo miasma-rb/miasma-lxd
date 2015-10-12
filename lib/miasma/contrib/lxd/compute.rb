@@ -17,7 +17,7 @@ module Miasma
         )
 
         # @return [Integer]
-        DEFAULT_EXEC_TIMEOUT = 20
+        DEFAULT_EXEC_TIMEOUT = 30
 
         # Reload a server model's data
         #
@@ -113,15 +113,18 @@ module Miasma
               }
             )
             wait_for_operation(result.get(:body, :operation))
-            request(
-              :path => "containers/#{server.name}/state",
-              :method => :put,
-              :expects => 202,
-              :json => {
-                :action => :start
-              }
-            )
-            wait_for_operation(result.get(:body, :operation))
+            until(server.state == :running)
+              request(
+                :path => "containers/#{server.name}/state",
+                :method => :put,
+                :expects => 202,
+                :json => {
+                  :action => :start
+                }
+              )
+              wait_for_operation(result.get(:body, :operation), 40)
+              server.reload
+            end
             server.id = server.name
             server
           end
