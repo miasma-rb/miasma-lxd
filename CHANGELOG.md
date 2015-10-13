@@ -1,3 +1,7 @@
+# v0.1.6
+* Wait for instance to become available on create
+* Retry start when instance still stopped on save
+
 # v0.1.4
 * Disable automatic body extraction on remote file fetch
 
