@@ -122,7 +122,7 @@ module Miasma
                   :action => :start
                 }
               )
-              wait_for_operation(result.get(:body, :operation), 40)
+              wait_for_operation(result.get(:body, :operation), 60)
               server.reload
             end
             server.id = server.name
