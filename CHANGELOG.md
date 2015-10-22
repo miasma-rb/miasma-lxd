@@ -1,3 +1,6 @@
+# v0.1.10
+* Make create -> start transition more stable
+
 # v0.1.8
 * Proper set server id prior to reload on start
 
