@@ -113,7 +113,7 @@ module Miasma
               }
             )
             wait_for_operation(result.get(:body, :operation))
-            until(server.state == :running)
+            until(server.state == :running || server.state == :terminated)
               request(
                 :path => "containers/#{server.name}/state",
                 :method => :put,
@@ -123,9 +123,12 @@ module Miasma
                 }
               )
               wait_for_operation(result.get(:body, :operation), 60)
+              server.id = server.name
               server.reload
             end
-            server.id = server.name
+            if(server.state == :terminated)
+              raise "Failed to save server state! (`#{server.name}`)"
+            end
             server
           end
         end
