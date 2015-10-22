@@ -112,7 +112,9 @@ module Miasma
                 }
               }
             )
-            wait_for_operation(result.get(:body, :operation))
+            wait_for_operation(result.get(:body, :operation), 60)
+            server.id = server.name
+            server.reload
             until(server.state == :running || server.state == :terminated)
               request(
                 :path => "containers/#{server.name}/state",
@@ -123,7 +125,6 @@ module Miasma
                 }
               )
               wait_for_operation(result.get(:body, :operation), 60)
-              server.id = server.name
               server.reload
             end
             if(server.state == :terminated)
