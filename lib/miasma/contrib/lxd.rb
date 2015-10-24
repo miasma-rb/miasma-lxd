@@ -88,13 +88,6 @@ module Miasma
           )
         end
 
-        # Always allow retry
-        #
-        # @return [TrueClass]
-        def retryable_allowed?(*_)
-          false
-        end
-
       end
     end
   end
