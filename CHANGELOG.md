@@ -1,3 +1,6 @@
+# v0.1.12
+* Remove request retry suppression
+
 # v0.1.10
 * Make create -> start transition more stable
 
