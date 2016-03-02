@@ -20,6 +20,7 @@ module Miasma
             attribute :ssl_certificate, String, :required => true
             attribute :ssl_key, String, :required => true
             attribute :version, Gem::Version, :coerce => lambda{|v| Gem::Version.new(v.to_s)}, :required => true, :default => lambda{ Miasma::Contrib::Lxd::Api::DEFAULT_API_VERSION }
+            attribute :image_server, String, :default => 'https://images.linuxcontainers.org:8443'
           end
         end
 

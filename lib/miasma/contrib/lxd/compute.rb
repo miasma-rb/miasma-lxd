@@ -41,6 +41,7 @@ module Miasma
                   :address => ip[:address]
                 )
               },
+              :addresses_public => [],
               :image_id => 'unknown',
               :flavor_id => result.get(:profiles).first,
               :userdata => result.get(:userdata),
@@ -250,6 +251,57 @@ module Miasma
             result.get(:body, :metadata, :metadata, :return) == 0
           end
         end
+
+        def image_all
+          result = request(:path => 'images/aliases')
+          all = result.fetch(:body, :metadata, []).map do |f_name|
+            f_name.sub('/1.0/images/aliases/', '')
+          end
+          all
+        end
+
+        def image_exists?(image_name)
+          image_all.include?(image_name)
+        end
+
+        def image_create(image_name, opts={})
+          source_data = Smash.new.tap do |src|
+            src[:type] = 'image'
+            src[:mode] = 'pull'
+            src[:server] = opts.fetch(:remote_server, image_server)
+            src[:secret] = opts[:secret] if opts[:secret]
+            if(opts[:alias])
+              src[:alias] = opts[:alias]
+            else
+              src[:fingerprint] = 'SHA256'
+            end
+          end
+          result = request(
+            :path => 'images',
+            :method => :post,
+            :json => {
+              :public => opts.fetch(:public, false),
+              :source => source_data
+            }
+          )
+          if(opts[:alias] && fingerprint = result.get(:body, :metadata, :fingerprint))
+            request(
+              :path => 'images/aliases',
+              :method => :post,
+              :json => {
+                :name => opts[:alias],
+                :target => fingerprint
+              }
+            )
+          end
+          puts result.inspect
+          result
+        end
+
+        def image_destroy(image_name)
+
+        end
+
 
         protected
 
