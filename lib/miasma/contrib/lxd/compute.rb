@@ -33,8 +33,8 @@ module Miasma
             server.load_data(
               :id => result[:name],
               :name => result[:name],
-              :state => SERVER_STATE_MAP.fetch(result.get(:status, :status).downcase, :pending),
-              :status => result.fetch(:status, :status, 'unknown').downcase,
+              :state => SERVER_STATE_MAP.fetch(result[:status].to_s.downcase, :pending),
+              :status => result.fetch(:status, 'unknown').downcase,
               :addresses_private => (result.get(:status, :ips) || []).map{ |ip|
                 Server::Address.new(
                   :version => ip[:protocol].downcase.sub('ipv', '').to_i,
@@ -225,7 +225,7 @@ module Miasma
           end
           websockets = Smash[
             ['control', '0'].map do |fd_id|
-              fd_secret = result.get(:body, :metadata, :fds, fd_id)
+              fd_secret = result.get(:body, :metadata, metadata, :fds, fd_id)
               [
                 fd_id,
                 Bogo::Websocket::Client.new(
