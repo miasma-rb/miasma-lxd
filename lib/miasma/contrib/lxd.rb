@@ -51,6 +51,13 @@ module Miasma
           connection.send(http_method, dest, options)
         end
 
+        # Never retry requests
+        #
+        # @return [FalseClass]
+        def perform_request_retry(*_)
+          false
+        end
+
         protected
 
         # @return [OpenSSL::SSL::SSLContext.new]
