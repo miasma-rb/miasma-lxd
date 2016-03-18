@@ -225,7 +225,7 @@ module Miasma
           end
           websockets = Smash[
             ['control', '0'].map do |fd_id|
-              fd_secret = result.get(:body, :metadata, metadata, :fds, fd_id)
+              fd_secret = result.get(:body, :metadata, :metadata, :fds, fd_id)
               [
                 fd_id,
                 Bogo::Websocket::Client.new(
@@ -302,7 +302,6 @@ module Miasma
 
         end
 
-
         protected
 
         # Wait for a remote operation to complete
@@ -311,14 +310,43 @@ module Miasma
         # @param timeout [Integer]
         # @return [TrueClass]
         def wait_for_operation(op_uuid, timeout=DEFAULT_EXEC_TIMEOUT)
-          op_uuid = op_uuid.sub("/#{version}/operations/", '')
-          request(
-            :path => "operations/#{op_uuid}/wait",
-            :params => {
-              :status_code => 200,
-              :timeout => timeout
-            }
-          )
+          if(ENV['LXD_POLL_OPERATION'])
+            polling_wait_for_operation(op_uuid, timeout)
+          else
+            op_uuid = op_uuid.sub("/#{version}/operations/", '')
+            request(
+              :path => "operations/#{op_uuid}/wait",
+              :params => {
+                :status_code => 200,
+                :timeout => timeout
+              }
+            )
+            true
+          end
+        end
+
+        # Wait for a remote operation to complete
+        #
+        # @param op_uuid [String]
+        # @param timeout [Integer]
+        # @return [TrueClass]
+        def polling_wait_for_operation(op_uuid, timeout=DEFAULT_EXEC_TIMEOUT)
+          total_time = 0.0
+          while(total_time < timeout)
+            op_uuid = op_uuid.sub("/#{version}/operations/", '')
+            result = request(
+              :path => "operations/#{op_uuid}",
+              :params => {
+                :status_code => 200
+              }
+            )
+            if(result.get(:body, :status).to_s.downcase == 'running')
+              total_time += 0.1
+              sleep(0.1)
+            else
+              total_time += timeout
+            end
+          end
           true
         end
 
