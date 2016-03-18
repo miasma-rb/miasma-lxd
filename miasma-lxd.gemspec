@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.description = 'Smoggy LXD API'
   s.license = 'Apache 2.0'
   s.require_path = 'lib'
-  s.add_runtime_dependency 'bogo-websocket', '< 1.0.0'
+  s.add_runtime_dependency 'bogo-websocket', '>= 0.1.5', '< 1.0.0'
   s.add_runtime_dependency 'miasma', '>= 0.2.31'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'minitest'
