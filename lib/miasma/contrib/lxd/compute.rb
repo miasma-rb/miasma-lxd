@@ -84,7 +84,7 @@ module Miasma
             request(
               :path => "containers/#{server.id}",
               :method => :delete,
-              :expects => 202
+              :expects => [202, 404] # NOTE: Allow 404 for ephemerals
             )
             true
           else
